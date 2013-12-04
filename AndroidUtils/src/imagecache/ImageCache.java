@@ -16,10 +16,11 @@ import android.graphics.Bitmap.CompressFormat;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
-
+import android.util.LruCache;
 
 public class ImageCache {
 	private final static String TAG = ImageCache.class.getName();
+	private final static int MaxSize = 64;
 
 	private volatile static ImageCache imageCache = null;
 
@@ -37,19 +38,18 @@ public class ImageCache {
 
 	private File dir;
 
-	private static Map<String, SoftReference<Drawable>> memoryCache = new HashMap<String, SoftReference<Drawable>>(); // url,drawable
-
+	private static ImageMemoryCache memoryCache;
 	private static Map<String, File> diskCache = new HashMap<String, File>();
 
 	private ImageCache() {
+		memoryCache = new ImageMemoryCache(MaxSize);
 		try {
 			dir = ImageStore.getCachedPath();
 		} catch (StorageException e) {
 			e.printStackTrace();
-			
+
 		}
 	}
-
 	public synchronized Drawable get(String url) {
 		Drawable drawable = getFromMemory(url);
 		if (drawable == null) {
@@ -57,15 +57,18 @@ public class ImageCache {
 		}
 		return drawable;
 	}
-
 	private Drawable getFromMemory(String url) {
-		if (memoryCache.containsKey(url)) {
-			SoftReference<Drawable> drawable = memoryCache.get(url);
-			if (drawable != null) {
-				Drawable d = drawable.get();
-				if (d != null) {
-					return d;
-				}
+		SoftReference<Drawable> drawable;
+		try {
+			drawable = (SoftReference<Drawable>) memoryCache.get(url);
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+			drawable = null;
+		}
+		if (drawable != null) {
+			Drawable d = drawable.get();
+			if (d != null) {
+				return d;
 			}
 		}
 		return null;
@@ -151,16 +154,11 @@ public class ImageCache {
 
 	public synchronized void put(String url, Drawable drawable) {
 		putToMemory(url, drawable);
-		try {
-			putToDisk(url, drawable);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	public synchronized void clearImageCache() {
 		File img;
-		//clear cached
+		// clear cached
 		try {
 			img = ImageStore.getCachedPath();
 			if (img.exists()) {
@@ -173,10 +171,9 @@ public class ImageCache {
 		} catch (StorageException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}finally{
+		} finally {
 			diskCache.clear();
 		}
-		//clear temp
 		try {
 			img = ImageStore.getTempPath();
 			if (img.exists()) {
@@ -190,7 +187,7 @@ public class ImageCache {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		//clear cached/drafts
+		// clear cached/drafts
 		try {
 			img = ImageStore.getDraftPath();
 			if (img.exists()) {
@@ -204,6 +201,27 @@ public class ImageCache {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
+	}
+
+	class ImageMemoryCache extends LruCache<String, SoftReference<Drawable>> {
+
+		public ImageMemoryCache(int maxSize) {
+			super(maxSize);
+			// TODO Auto-generated constructor stub
+		}
+
+		@Override
+		protected void entryRemoved(boolean evicted, String key,
+				SoftReference<Drawable> oldValue, SoftReference<Drawable> newValue) {
+			// TODO Auto-generated method stub
+			super.entryRemoved(evicted, key, oldValue, newValue);
+			try {
+				putToDisk(key, oldValue.get());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
 	}
 }
