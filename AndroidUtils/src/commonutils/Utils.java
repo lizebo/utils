@@ -25,8 +25,8 @@ import android.graphics.Rect;
 import android.util.Log;
 
 public class Utils {
-	public static UrlEncodedFormEntity getPostParamters(List<NameValuePair> params)
-			throws UnsupportedEncodingException {
+	public static UrlEncodedFormEntity getPostParamters(
+			List<NameValuePair> params) throws UnsupportedEncodingException {
 		if (params == null || params.isEmpty()) {
 			return null;
 		}
@@ -72,8 +72,9 @@ public class Utils {
 		return buffer.toString();
 	}
 
-	public static String StringToMD5(String str) throws NoSuchAlgorithmException{
-		MessageDigest md5=MessageDigest.getInstance("MD5");
+	public static String StringToMD5(String str)
+			throws NoSuchAlgorithmException {
+		MessageDigest md5 = MessageDigest.getInstance("MD5");
 		md5.update(str.getBytes());
 		byte[] m = md5.digest();
 		return getString(m);
@@ -86,17 +87,18 @@ public class Utils {
 		}
 		return sb.toString();
 	}
-	
+
 	public static int dip2px(Context context, float dpValue) {
-	    final float scale = context.getResources().getDisplayMetrics().density;
-	    return (int) (dpValue * scale + 0.5f);
+		final float scale = context.getResources().getDisplayMetrics().density;
+		return (int) (dpValue * scale + 0.5f);
 	}
 
 	public static int px2dip(Context context, float pxValue) {
-	    final float scale = context.getResources().getDisplayMetrics().density;
-	    return (int) (pxValue / scale + 0.5f);
+		final float scale = context.getResources().getDisplayMetrics().density;
+		return (int) (pxValue / scale + 0.5f);
 	}
-	public static Bitmap drawCircleBitmap(Context context,Bitmap bitmap) {
+
+	public static Bitmap drawCircleBitmap(Context context, Bitmap bitmap) {
 		int targetWidth = dip2px(context, 90);
 		int targetHeight = targetWidth;
 		Bitmap sourceBitmap = bitmap;
@@ -115,30 +117,59 @@ public class Utils {
 				targetHeight), null);
 		return targetBitmap;
 	}
+
 	/**
-	* 获取压缩后的图片
-	* @param res
-	* @param resId
-	* @param reqWidth            所需图片压缩尺寸最小宽度
-	* @param reqHeight           所需图片压缩尺寸最小高度
-	* @return
-	*/
-	public static Bitmap decodeSampledBitmapFromResource(Resources res, int resId,
-	        int reqWidth, int reqHeight) {
-	   
-	    // 首先不加载图片,仅获取图片尺寸
-	    final BitmapFactory.Options options = new BitmapFactory.Options();
-	    // 当inJustDecodeBounds设为true时,不会加载图片仅获取图片尺寸信息
-	    options.inJustDecodeBounds = true;
-	    // 此时仅会将图片信息会保存至options对象内,decode方法不会返回bitmap对象
-	    BitmapFactory.decodeResource(res, resId, options);
+	 * 获取压缩后的图片
+	 * 
+	 * @param res
+	 * @param resId
+	 * @param reqWidth
+	 *            所需图片压缩尺寸最小宽度
+	 * @param reqHeight
+	 *            所需图片压缩尺寸最小高度
+	 * @return
+	 */
+	public static Bitmap decodeSampledBitmapFromResource(Resources res,
+			int resId, int reqWidth, int reqHeight) {
 
-	    // 计算压缩比例,如inSampleSize=4时,图片会压缩成原图的1/4
-	    options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+		// 首先不加载图片,仅获取图片尺寸
+		final BitmapFactory.Options options = new BitmapFactory.Options();
+		// 当inJustDecodeBounds设为true时,不会加载图片仅获取图片尺寸信息
+		options.inJustDecodeBounds = true;
+		// 此时仅会将图片信息会保存至options对象内,decode方法不会返回bitmap对象
+		BitmapFactory.decodeResource(res, resId, options);
 
-	    // 当inJustDecodeBounds设为false时,BitmapFactory.decode...就会返回图片对象了
-	    options. inJustDecodeBounds = false;
-	    // 利用计算的比例值获取压缩后的图片对象
-	    return BitmapFactory.decodeResource(res, resId, options);
+		// 计算压缩比例,如inSampleSize=4时,图片会压缩成原图的1/4
+		options.inSampleSize = calculateInSampleSize(options, reqWidth,
+				reqHeight);
+
+		// 当inJustDecodeBounds设为false时,BitmapFactory.decode...就会返回图片对象了
+		options.inJustDecodeBounds = false;
+		// 利用计算的比例值获取压缩后的图片对象
+		return BitmapFactory.decodeResource(res, resId, options);
+	}
+
+	public static int calculateInSampleSize(BitmapFactory.Options options,
+			int reqWidth, int reqHeight) {
+		// Raw height and width of image
+		final int height = options.outHeight;
+		final int width = options.outWidth;
+		int inSampleSize = 1;
+
+		if (height > reqHeight || width > reqWidth) {
+
+			final int halfHeight = height / 2;
+			final int halfWidth = width / 2;
+
+			// Calculate the largest inSampleSize value that is a power of 2 and
+			// keeps both
+			// height and width larger than the requested height and width.
+			while ((halfHeight / inSampleSize) > reqHeight
+					&& (halfWidth / inSampleSize) > reqWidth) {
+				inSampleSize *= 2;
+			}
+		}
+
+		return inSampleSize;
 	}
 }
