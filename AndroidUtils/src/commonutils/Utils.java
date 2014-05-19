@@ -16,7 +16,9 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.protocol.HTTP;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Path;
 import android.graphics.Rect;
@@ -112,5 +114,31 @@ public class Utils {
 				sourceBitmap.getHeight()), new Rect(0, 0, targetWidth,
 				targetHeight), null);
 		return targetBitmap;
+	}
+	/**
+	* 获取压缩后的图片
+	* @param res
+	* @param resId
+	* @param reqWidth            所需图片压缩尺寸最小宽度
+	* @param reqHeight           所需图片压缩尺寸最小高度
+	* @return
+	*/
+	public static Bitmap decodeSampledBitmapFromResource(Resources res, int resId,
+	        int reqWidth, int reqHeight) {
+	   
+	    // 首先不加载图片,仅获取图片尺寸
+	    final BitmapFactory.Options options = new BitmapFactory.Options();
+	    // 当inJustDecodeBounds设为true时,不会加载图片仅获取图片尺寸信息
+	    options.inJustDecodeBounds = true;
+	    // 此时仅会将图片信息会保存至options对象内,decode方法不会返回bitmap对象
+	    BitmapFactory.decodeResource(res, resId, options);
+
+	    // 计算压缩比例,如inSampleSize=4时,图片会压缩成原图的1/4
+	    options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+	    // 当inJustDecodeBounds设为false时,BitmapFactory.decode...就会返回图片对象了
+	    options. inJustDecodeBounds = false;
+	    // 利用计算的比例值获取压缩后的图片对象
+	    return BitmapFactory.decodeResource(res, resId, options);
 	}
 }

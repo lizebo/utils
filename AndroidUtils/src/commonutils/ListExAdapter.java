@@ -46,6 +46,4 @@ public class ListExAdapter extends BaseAdapter {
 		return convertView;
 		}
 	}
-
 }
-
